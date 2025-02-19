@@ -51,9 +51,7 @@ databases:
     production: true
     cluster_name: multi-docker-db
     version: "14"
-
-databases:
   - name: redis
     engine: REDIS
     production: true
-    version: "6" 
+    version: "6"
