@@ -1,0 +1,43 @@
+name: Deploy to DigitalOcean
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Test client
+        run: |
+          cd client
+          npm install
+          npm run test -- --coverage
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Log in to DO Container Registry
+        run: doctl registry login --expiry-seconds 600
+
+      - name: Build production images
+        run: |
+          docker build -t registry.digitalocean.com/${{ secrets.DO_REGISTRY_NAME }}/multi-client:${GITHUB_SHA::7} ./client
+          docker build -t registry.digitalocean.com/${{ secrets.DO_REGISTRY_NAME }}/multi-server:${GITHUB_SHA::7} ./server
+          docker build -t registry.digitalocean.com/${{ secrets.DO_REGISTRY_NAME }}/multi-worker:${GITHUB_SHA::7} ./worker
+          docker build -t registry.digitalocean.com/${{ secrets.DO_REGISTRY_NAME }}/multi-nginx:${GITHUB_SHA::7} ./nginx
+
+      - name: Push images to DO Container Registry
+        run: |
+          docker push registry.digitalocean.com/${{ secrets.DO_REGISTRY_NAME }}/multi-client:${GITHUB_SHA::7}
+          docker push registry.digitalocean.com/${{ secrets.DO_REGISTRY_NAME }}/multi-server:${GITHUB_SHA::7}
+          docker push registry.digitalocean.com/${{ secrets.DO_REGISTRY_NAME }}/multi-worker:${GITHUB_SHA::7}
+          docker push registry.digitalocean.com/${{ secrets.DO_REGISTRY_NAME }}/multi-nginx:${GITHUB_SHA::7}
+
+      - name: Deploy to DO App Platform
+        run: |
+          doctl apps update ${{ secrets.DO_APP_ID }} --spec .do/app.yaml

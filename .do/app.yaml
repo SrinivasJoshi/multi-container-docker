@@ -1,0 +1,59 @@
+name: multi-docker-app
+region: nyc
+services:
+  - name: client
+    image:
+      registry_type: DOCR
+      repository: multi-client
+      tag: ${GITHUB_SHA::7}
+    instance_count: 1
+    instance_size_slug: basic-xxs
+
+  - name: api
+    image:
+      registry_type: DOCR
+      repository: multi-server
+      tag: ${GITHUB_SHA::7}
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    envs:
+      - key: REDIS_HOST
+        value: ${redis.HOSTNAME}
+      - key: REDIS_PORT
+        value: "6379"
+      - key: PGHOST
+        value: ${db.HOSTNAME}
+      - key: PGPORT
+        value: "5432"
+      - key: PGUSER
+        value: ${db.USERNAME}
+      - key: PGPASSWORD
+        value: ${db.PASSWORD}
+      - key: PGDATABASE
+        value: ${db.DATABASE}
+
+  - name: worker
+    image:
+      registry_type: DOCR
+      repository: multi-worker
+      tag: ${GITHUB_SHA::7}
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    envs:
+      - key: REDIS_HOST
+        value: ${redis.HOSTNAME}
+      - key: REDIS_PORT
+        value: "6379"
+
+databases:
+  - name: db
+    engine: PG
+    production: true
+    cluster_name: multi-docker-db
+    version: "14"
+
+databases:
+  - name: redis
+    engine: REDIS
+    production: true
+    version: "6" 

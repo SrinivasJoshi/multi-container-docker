@@ -1,0 +1,22 @@
+# First, create a DigitalOcean account if you haven't already
+
+1. Create a new project in DO
+2. Go to API → Generate New Token
+   - Give it a name like "GitHub-Actions"
+   - Copy the token
+3. Go to Container Registry
+   - Create a new registry
+   - Copy the registry name
+
+Add these secrets to your GitHub repository:
+- DIGITALOCEAN_ACCESS_TOKEN: Your DO API token
+- DO_REGISTRY_NAME: Your container registry name
+- DO_APP_ID: (You'll get this after creating the app)
+
+1. Go to DigitalOcean Apps
+2. Click "Create App"
+3. Choose "Source from GitHub"
+4. Select your repository
+5. It will detect your .do/app.yaml
+6. Click through the setup
+7. Copy the App ID and add it to GitHub secrets
